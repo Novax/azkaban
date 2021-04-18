@@ -17,6 +17,7 @@
 package azkaban.execapp;
 
 import static azkaban.Constants.ConfigurationKeys.AZKABAN_SERVER_HOST_NAME;
+import static azkaban.Constants.ConfigurationKeys.MAX_CONCURRENT_RUNS_ONEFLOW;
 import static azkaban.execapp.ConditionalWorkflowUtils.FAILED;
 import static azkaban.execapp.ConditionalWorkflowUtils.PENDING;
 import static azkaban.execapp.ConditionalWorkflowUtils.checkConditionOnJobStatus;
@@ -532,6 +533,10 @@ public class FlowRunner extends EventHandler implements Runnable {
       }
     }
 
+    if(node.getOutNodes().isEmpty() && !node.getConditionOnJobStatus().equals(ConditionOnJobStatus.ALL_SUCCESS)) {
+        shouldFail = false;
+    }
+
     if (shouldFail) {
       propagateStatus(node.getParentFlow(),
           node.getStatus() == Status.KILLED ? Status.KILLED : Status.FAILED_FINISHING);
@@ -643,16 +648,15 @@ public class FlowRunner extends EventHandler implements Runnable {
     boolean succeeded = true;
     Props previousOutput = null;
 
+
     for (final String end : flow.getEndNodes()) {
       final ExecutableNode node = flow.getExecutableNode(end);
-
       if (node.getStatus() == Status.KILLED
           || node.getStatus() == Status.KILLING
           || node.getStatus() == Status.FAILED
           || node.getStatus() == Status.CANCELLED) {
         succeeded = false;
       }
-
       Props output = node.getOutputProps();
       if (output != null) {
         output = Props.clone(output);

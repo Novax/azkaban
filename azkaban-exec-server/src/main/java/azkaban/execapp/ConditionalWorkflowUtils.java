@@ -23,12 +23,15 @@ import static azkaban.flow.ConditionOnJobStatus.ONE_SUCCESS;
 import azkaban.executor.ExecutableNode;
 import azkaban.executor.Status;
 import azkaban.flow.ConditionOnJobStatus;
+import org.apache.log4j.Logger;
 
 public class ConditionalWorkflowUtils {
 
   public static final String SATISFIED = "satisfied";
   public static final String PENDING = "pending";
   public static final String FAILED = "failed";
+
+  private static Logger logger = Logger.getLogger("ConditionalWorkflowUtils");
 
   public static String checkConditionOnJobStatus(final ExecutableNode node) {
     final ConditionOnJobStatus conditionOnJobStatus = node.getConditionOnJobStatus();
@@ -58,6 +61,8 @@ public class ConditionalWorkflowUtils {
         result = FAILED;
       }
     }
+    logger.info("Result " + result + node.getId());
+
     return result;
   }
 
